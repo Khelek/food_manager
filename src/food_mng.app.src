@@ -1,4 +1,4 @@
-{application, food-mng,
+{application, food_mng,
  [
   {description, ""},
   {vsn, "1"},
@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { food-mng_app, []}},
+  {mod, { food_mng_app, []}},
   {env, []}
  ]}.

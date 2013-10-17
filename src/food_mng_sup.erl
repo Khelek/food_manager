@@ -1,4 +1,4 @@
--module(food-mng_sup).
+-module(food_mng_sup).
 
 -behaviour(supervisor).
 
