@@ -12,7 +12,10 @@
 start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
                                       {'_', [
-                                              {"/", http_receiver []}
+                                              {"/", http_receiver, []},
+                                              {"/user", http_receiver, [user]},
+                                              {"/table", http_receiver, [table]},
+                                              {"/shoplist", http_receiver, [shoplist]},
                                             ]}
                                      ]),
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [

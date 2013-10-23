@@ -34,7 +34,7 @@ calculate_substances({PersonalData, Activity}) ->
     {RealCPD, FPC, Vitamins, Minerals}. 
 
 calculate_grammsAtMonth(Products, {RealCPD, FPC, Vitamins, Minerals}) ->
-    lapack_wrap:solve_equations(Products, (RealCPD, FPC, Vitamins, Minerals)).
+    algo_wrap:solve_equations(Products, (RealCPD, FPC, Vitamins, Minerals)).
 
 calories_per_day({Sex, Weight, Height, Age}) ->
     case Sex of
