@@ -2,7 +2,7 @@
 
 -export([process_products/1]).
 
-process_products(Data) ->
+calculate_products_list(Data) ->
     Products = db_processor:get_products(ExcludeItems), %
     Substances = calculate_substances(Data), %
     calculate_grammsAtMonth(Products, Substances). 
@@ -34,7 +34,7 @@ calculate_substances({PersonalData, Activity}) ->
     {RealCPD, FPC, Vitamins, Minerals}. 
 
 calculate_grammsAtMonth(Products, {RealCPD, FPC, Vitamins, Minerals}) ->
-    algo_wrap:solve_equations(Products, (RealCPD, FPC, Vitamins, Minerals)).
+    algo_wrap:solve_equations(Products, {RealCPD, FPC, Vitamins, Minerals}).
 
 calories_per_day({Sex, Weight, Height, Age}) ->
     case Sex of

@@ -21,8 +21,8 @@ handle(Req, State) ->
                    {ok, Json, Req3} = cowboy_req:body(infinity, Req2),
                    Data = decoder(Json), 
                    Res = case handle_worker(State, Method, Data) of
-                             {error, Reason} -> #answer{response = <<"error">>};
-                             {ok, ResData} -> ResData
+                             {ok, ResData} -> #answer{success = true, response = ResData};
+                             {error, Reason} -> #answer{success = false, response = Reason}
                          end,
                    ResJson = encoder(Res), 
                    cowboy_req:reply(Req3, ResJson);
@@ -33,10 +33,17 @@ handle(Req, State) ->
 handle(Req, State = undefined) ->
     {ok, Req, State}. %ошибка
 
-handle_worker(user, Method, Data) ->
-    ;
+handle_worker(user, <<POST>>, #auth{login = BinLogin, password = BinPassword, registration = Registration}) ->
+    Login = binary:bin_to_list(BinLogin),
+    Password = binary:bin_to_list(BinPassword),
+    Response = case Registration of 
+        true ->
+            db:new_user(Login, Password),
+        false ->
+            db:user_is_auth(Login, Password), 
+    end;
 handle_worker(table, <<POST>>, Data) ->
-    processor:process_products(Data);
+    processor:calculate_products_list((ata);
 handle_worker(shoplist, Method, Data) ->
     .
 

@@ -8,7 +8,7 @@
                exclude_products = [],
                family = []}).
 -record(auth, {login = <<>>, password = <<>>, registration = false}).
--record(answer, {response = <<>>}).
+-record(answer, {success = true, response = <<>>}).
 -record(table, {products = []}).
 -record(product, {name = <<>>, ccal = 0, price = 0}).
 
