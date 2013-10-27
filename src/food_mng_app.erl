@@ -15,9 +15,10 @@ start(_StartType, _StartArgs) ->
                                               {"/", http_receiver, []},
                                               {"/user", http_receiver, [user]},
                                               {"/table", http_receiver, [table]},
-                                              {"/shoplist", http_receiver, [shoplist]},
+                                              {"/shoplist", http_receiver, [shoplist]}
                                             ]}
                                      ]),
+    Port = 8081, %% сделать переменной application
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),

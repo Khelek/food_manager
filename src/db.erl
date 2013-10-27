@@ -20,10 +20,10 @@ db_request(Fun) ->
 
 get_products(ExcludeItems) ->
     {ok, Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end), %% TODO: add exclude products to query
-    Products = from Rows to Product = Row. %% convert row to product tuple
+    Products = lists:map(fun(A) -> erlang:tuple_to_list(A) end, Rows). 
 
 update_products_price(Values) -> %%%`
-    {ok, Count} = db_request(fun(Conn) -> pgsql:equery(Conn, "update price from products values ($1, $2, $3)", [Values]). %% generic request
+    {ok, Count} = db_request(fun(Conn) -> pgsql:equery(Conn, "update price from products values ($1, $2, $3)", [Values]) end). %% generic request
 
 new_user(Login, Password) ->
     db_request(fun(Conn) -> 
@@ -78,11 +78,11 @@ set_user_attr(Login, Query, Attr) ->
 %% queries
 
 -spec get_products_query({ [string()], [string()] }) -> string().
-get_products_query(ExcludeItems = {ExcludeType, ExcludeProducts}) ->
+get_products_query(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
     "SELECT name, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg, 
        fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp, 
-       h, calories, types, price FROM products WHERE NOT types && " ++ pg_array(ExcludeType) 
-        ++ " AND NOT ARRAY[name] && " ++ pg_array(ExludeProducts) ++ ";".
+       h, calories, types, price FROM products WHERE NOT types && " ++ pg_array(ExcludeTypes) 
+        ++ " AND NOT ARRAY[name] && " ++ pg_array(ExcludeProducts) ++ ";".
 
 %% utilite
 

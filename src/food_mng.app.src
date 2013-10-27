@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { food_mng_app, []}},
+  {mod, { food_mng_app, http_receiver, processor, []}},
   {env, []}
  ]}.

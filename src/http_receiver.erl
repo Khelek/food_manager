@@ -2,7 +2,7 @@
 %% cowboy handler
 -export([init/3, handle/2, terminate/3]).
 
--include("../include/records.hrl").
+-include("include/records.hrl").
 
 %% API.
 
@@ -38,29 +38,32 @@ handle_worker(user, <<POST>>, #auth{login = BinLogin, password = BinPassword, re
     Password = binary:bin_to_list(BinPassword),
     Response = case Registration of 
         true ->
-            db:new_user(Login, Password),
+            db:new_user(Login, Password);
         false ->
-            db:user_is_auth(Login, Password), 
+            db:user_is_auth(Login, Password)
     end;
 handle_worker(table, <<POST>>, Data) ->
-    processor:calculate_products_list((ata);
+    processor:calculate_products_list(Data); 
 handle_worker(shoplist, Method, Data) ->
-    .
+    ok. %%%
 
 terminate(_Reason, _Req, _State) ->
     ok.
 
 %% utilite function
 
-encoder() ->
-     jsonx:encoder([{person,   record_info(fields, person)},
+encoder(Json) ->
+    Encoder = jsonx:encoder([{person,   record_info(fields, person)},
+                             {auth,  record_info(fields, auth)},
+                             {answer, record_info(fields, answer)},
+                             {table, record_info(fields, table)},
+                             {product, record_info(fields, product)}]),
+    Encoder(Json).
+
+decoder(Json) ->
+    Decoder = jsonx:decoder([{person,   record_info(fields, person)},
                     {auth,  record_info(fields, auth)},
-                    {answer, record_info(answer)},
-                    {table, record_info(table)},
-                    {product, record_info(product)}]).
-decoder() ->
-     jsonx:decoder([{person,   record_info(fields, person)},
-                    {auth,  record_info(fields, auth)},
-                    {answer, record_info(answer)},
-                    {table, record_info(table)},
-                    {product, record_info(product)}]).
+                    {answer, record_info(fields, answer)},
+                    {table, record_info(fields, table)},
+                    {product, record_info(fields, product)}]),
+    Decoder(Json).
