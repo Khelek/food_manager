@@ -1,9 +1,9 @@
 -module(matlab).
 -export([solve_equations/2]).
 
-solve_equations(Matrix, Coeff) ->
+solve_equations(ListOfLists, Coeff) ->
     MatlabAnswer = os:cmd("matlab  -nosplash -nodesktop -nodisplay -r \"warning off;" 
-     ++ "x = libnnls([" ++ matrix_to_string(Matrix) ++ "], [" ++ vector_to_string(Coeff) ++ "]); disp('ResultOfNNLS:');" 
+     ++ "x = libnnls([" ++ matrix_to_string(ListOfLists) ++ "], [" ++ vector_to_string(Coeff) ++ "]); disp('ResultOfNNLS:');"
      ++ "disp(x); exit;\""),
     Strings = string:tokens(MatlabAnswer, "\n "), 
     [_Head | AnswerList] = lists:dropwhile(fun(A) -> not string:equal(A, "ResultOfNNLS:") end, Strings),

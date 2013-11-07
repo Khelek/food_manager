@@ -8,9 +8,8 @@
                exclude_products = [],
                family = []}). % family = [#person{}]
 -record(auth, {login = <<>>, password = <<>>, registration = false}).
--record(answer, {success = true, response = <<>>}).
--record(table, {products = [], family = []}). %% продукты для членов семьи
--record(product, {name = <<>>, ccal = 0, price = 0}).
-
-
+-record(answer, {success = true, response}).
+-record(product, {name = <<>>, ccal = 0, price = 0, mass = 0}).
+-record(table, {products = [#product{}], family = []}). %% family - продукты для членов семьи
+-record(request, {login = <<>>, action = <<>>, body}).
 

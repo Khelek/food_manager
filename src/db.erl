@@ -11,6 +11,8 @@
 -define(set_shoplist_query, "UPDATE users SET shopping_list = $2 WHERE login = $1").
 
 
+-compile(export_all).
+
 
 db_request(Fun) ->
     {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
@@ -34,7 +36,7 @@ new_user(Login, Password) ->
                                case pgsql:equery(Conn, ?new_user_query, [Login, Password]) of
                                    {ok, _, _} -> {ok, <<"ok">>};
                                    {error, _} -> {error, <<"db error">>};
-                                   _ -> {error, <<"invalid">>}
+                                   _ -> {error, <<"error invalid">>}
                                end
                        end
                end).
@@ -44,7 +46,7 @@ user_is_auth(Login, Password) ->
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, ?exists_user_query, [Login, Password]) of
                            {ok, Columns, Rows} when length(Rows) > 0 -> {ok, <<"ok">>};
-                           _ -> {error, <<"db error">>}
+                           _ -> {error, <<"error">>}
                        end
                end).
 
@@ -71,7 +73,7 @@ get_user_attr(Login, Query) ->
 set_user_attr(Login, Query, Attr) ->    
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, Query, [Login, Attr]) of
-                           {ok, Count} -> {ok, <<"update complite">>};
+                           {ok, Count} -> {ok, <<"ok">>};
                            _ -> {error, <<"db error">>}
                        end
                end).
@@ -79,11 +81,29 @@ set_user_attr(Login, Query, Attr) ->
 
 -spec get_products_query({ [string()], [string()] }) -> string().
 get_products_query(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
-    "SELECT name, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg, 
-       fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp, 
-       h, calories, types, price FROM products WHERE NOT types && " ++ pg_array(ExcludeTypes) 
-        ++ " AND NOT ARRAY[name] && " ++ pg_array(ExcludeProducts) ++ ";".
+    "SELECT name, en_name, calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
+       "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
+        "h, types FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
 
+where([]) ->
+    ";";
+where(Condition) ->
+    " WHERE " ++ Condition ++ ";".
+
+and_(Val1, Val2) when Val1 == []; Val2 == [] ->
+    Val1 ++ Val2;
+and_(Val1, Val2) ->
+    Val1 ++ " AND " ++ Val2.    
+
+not_types([]) ->
+    [];
+not_types(ExcludeTypes) ->
+    "NOT types && " ++ pg_array(ExcludeTypes).
+
+not_products([]) ->
+    [];
+not_products(ExcludeProducts) ->
+    "NOT ARRAY[name] && " ++ pg_array(ExcludeProducts).
 %% utilite
 
 pg_array(ListString) ->
