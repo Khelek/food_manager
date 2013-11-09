@@ -80,10 +80,10 @@ set_user_attr(Login, Query, Attr) ->
 %% queries
 
 -spec get_products_query({ [string()], [string()] }) -> string().
-get_products_query(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
-    "SELECT name, en_name, calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
+get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
+    "SELECT name, en_name, types, calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
        "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
-        "h, types FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
+        "h FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
 
 where([]) ->
     ";";

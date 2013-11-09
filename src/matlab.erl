@@ -2,11 +2,13 @@
 -export([solve_equations/2]).
 
 solve_equations(ListOfLists, Coeff) ->
+    ResultKey = "ResultOfNNLS:",
     MatlabAnswer = os:cmd("matlab  -nosplash -nodesktop -nodisplay -r \"warning off;" 
-     ++ "x = libnnls([" ++ matrix_to_string(ListOfLists) ++ "], [" ++ vector_to_string(Coeff) ++ "]); disp('ResultOfNNLS:');"
+     ++ "x = libnnls([" ++ matrix_to_string(ListOfLists) ++ "], [" ++ vector_to_string(Coeff) ++ "]); disp('" ++ ResultKey ++ "');"
      ++ "disp(x); exit;\""),
+    ((string:str(MatlabAnswer, ResultKey) == 0) andalso throw("No result.")),
     Strings = string:tokens(MatlabAnswer, "\n "), 
-    [_Head | AnswerList] = lists:dropwhile(fun(A) -> not string:equal(A, "ResultOfNNLS:") end, Strings),
+    [_Head | AnswerList] = lists:dropwhile(fun(A) -> not string:equal(A, ResultKey) end, Strings),
     _SolutionVector = lists:map(fun(A) -> {Float, _Rest} = string:to_float(A), Float end, AnswerList).
 
 matrix_to_string(Matrix) ->
