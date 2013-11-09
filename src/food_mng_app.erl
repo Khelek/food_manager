@@ -10,6 +10,7 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    application:start(ranch),
     Dispatch = cowboy_router:compile([
                                       {'_', [
                                               {"/", http_receiver, []},

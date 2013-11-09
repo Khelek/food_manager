@@ -14,7 +14,7 @@ person() ->
 
 init(_Transport, Req, []) ->
     {ok, Req, undefined};
-init(_Transport, Req, Opts) ->
+init(_Transport, Req, [Opts]) ->
     {ok, Req, Opts}.
 
 
@@ -33,7 +33,7 @@ handle(Req, State) ->
                              {error, Reason} -> #answer{success = false, response = Reason}
                          end,
                    ResJson = encoder(Res), 
-                   cowboy_req:reply(Req3, ResJson);
+                   cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>}], ResJson, Req3);
                _ ->
                    some          
            end,
@@ -48,16 +48,33 @@ handle_worker(user, <<"POST">>, #auth{login = BinLogin, password = BinPassword, 
         false ->
             db:user_is_auth(Login, Password)
     end;
-handle_worker(table, <<"POST">>, Data) ->
-    processor:calculate_products_list(Data); 
+handle_worker(table, <<"POST">>,  #request{login = Login, action = <<"get">>, body = Data}) ->
+    if_registred_do(fun() ->
+                            try
+                                {ok, processor:calculate_products_list(Data)} 
+                            catch 
+                                throw:Term -> {error, erlang:list_to_bitstr(Term)};
+                                exit:Reason -> {error, erlang:list_to_bitstr(Reason)};
+                                error:Reason -> {error, erlang:list_to_bitstr(Reason)}
+                            end
+                    end, Login);
 handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"get">>}) ->
-    db:get_user_shoplist(Login);
+    if_registred_do(fun() -> 
+                            db:get_user_shoplist(Login) 
+                    end, Login);
 handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"set">>, body = Shoplist}) -> %% Shoplist - тупо строка(или объект?)
-    db:set_user_shoplist(Login, Shoplist).
+    if_registred_do(fun() -> 
+                            db:set_user_shoplist(Login, Shoplist) 
+                    end, Login).
 
 terminate(_Reason, _Req, _State) ->
     ok.
 
+if_registred_do(Fun, Login) ->
+    case db:user_is_registred(Login) of
+        {ok, _} -> Fun();
+        {error, Reason} -> {error, Reason}
+    end.
 %% utilite function
 
 encoder(Json) ->
@@ -66,7 +83,8 @@ encoder(Json) ->
                              {answer, record_info(fields, answer)},
                              {table, record_info(fields, table)},
                              {request, record_info(fields, request)},
-                             {product, record_info(fields, product)}]),
+                             {product, record_info(fields, product)}],
+                            [{format, proplist}]),
     Encoder(Json).
 
 decoder(Json) ->

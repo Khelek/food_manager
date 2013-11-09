@@ -34,13 +34,20 @@ new_user(Login, Password) ->
                                {error, <<"login is busy">>};
                            _ -> 
                                case pgsql:equery(Conn, ?new_user_query, [Login, Password]) of
-                                   {ok, _, _} -> {ok, <<"ok">>};
+                                   {ok, _} -> {ok, <<"ok">>};
                                    {error, _} -> {error, <<"db error">>};
                                    _ -> {error, <<"error invalid">>}
                                end
                        end
                end).
                            
+user_is_registred(Login) ->
+    db_request(fun(Conn) -> 
+                       case pgsql:equery(Conn, ?select_user_query, [Login]) of
+                           {ok, Columns, Rows} when length(Rows) > 0 -> {ok, <<"user is registred">>};
+                           _ -> {error, <<"user is not registred">>}
+                       end
+               end).
 
 user_is_auth(Login, Password) ->
     db_request(fun(Conn) -> 
@@ -65,7 +72,8 @@ set_user_shoplist(Login, Shoplist) ->
 get_user_attr(Login, Query) ->
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, Query, [Login]) of
-                           {ok, Columns, Rows = [Attr|_Tail]} when length(Rows) > 0 -> {ok, Attr};
+                           {ok, Columns, Rows = [{Attr}|_Tail]} when length(Rows) > 0, Attr == null -> {ok, <<"null">>};
+                           {ok, Columns, Rows = [{Attr}|_Tail]} when length(Rows) > 0 -> {ok, Attr};
                            _ -> {error, <<"db error">>}
                        end
                end).
@@ -107,7 +115,7 @@ not_products(ExcludeProducts) ->
 %% utilite
 
 pg_array(ListString) ->
-    "ARRAY['" ++ string:join(ListString, "','") ++ "']".
+    "ARRAY['" ++ string:join(binlist_to_list(ListString), "','") ++ "']".
 
 binlist_to_list(List) ->
     lists:map(fun(A) -> binary:bin_to_list(A) end, List).
