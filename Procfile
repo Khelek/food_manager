@@ -1,2 +1,2 @@
-web: erl -pa ebin deps/*/ebin +pc unicode -eval "food_mng:start()." -noshell -noinput
+web: erl -pa ebin deps/*/ebin -noshell -noinput -s food_mng
 
