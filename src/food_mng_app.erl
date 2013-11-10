@@ -20,6 +20,7 @@ start(_StartType, _StartArgs) ->
                                             ]}
                                      ]),
     Port = port(),
+    erlang:display(os:getenv("DATABASE_URL")),
     {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),
