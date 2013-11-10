@@ -20,7 +20,7 @@ db_request(Fun) ->
             {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]);
         URL ->
             [User, Password, Host, Port, DB] = heroku_db(URL),
-            {ok, Conn} = pgsql:connect(Host, User, Port, [{database, DB}, {port, list_to_integer(Port)}])
+            {ok, Conn} = pgsql:connect(Host, User, Password, [{database, DB}, {port, list_to_integer(Port)}])
     end,
     Res = Fun(Conn),
     pgsql:close(Conn),
