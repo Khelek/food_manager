@@ -30,7 +30,7 @@ calculate_grammsAtMonth(Products, {Calories, FPC, Minerals, Vitamins}, Budget) -
     VitaminsCoeff = DropFirst(Vitamins),
     ProductIndexses = [Indexses || [_Name, _EnName, _Type | Indexses] <- Products],
     Coefficients = lists:flatten([Calories, Budget, FPC, MineralsCoeff, VitaminsCoeff]), 
-    Masses = matlab_dummy(ProductIndexses), %% matlab:solve_equations(ProductIndexses, Coefficients),
+    Masses = matlab_dummy(ProductIndexses), %% alge:solve_equations(ProductIndexses, Coefficients),
     lists:zipwith(fun(Mass, [Name, _EnName, _Type, CCal, Price | _Tail]) ->
                           #product{name = Name, ccal = CCal, price = Price, mass = Mass} end, Masses, Products).
 
