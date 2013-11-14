@@ -4,11 +4,6 @@
 
 -include("include/records.hrl").
 -compile(export_all).
-%%
-
-
-person() ->
-     #person{}.
 
 %% API.
 
@@ -24,10 +19,11 @@ handle(Req, State) ->
     {Method, Req2} = cowboy_req:method(Req),
     ReqResultate = case Method of 
                <<"PUT">> -> % еще GET?
-                   cowboy_req:reply(Req2, cowboy_req:body(infinity, Req2)); % заменить таблицу 
+                   cowboy_req:reply(Req2, cowboy_req:body(infinity, Req2)); %% no 
                <<"POST">> ->
                    {ok, Json, Req3} = cowboy_req:body(infinity, Req2),
                    Data = decoder(Json), 
+                   erlang:display(#find_recipes{}),
                    Res = case handle_worker(State, Method, Data) of
                              {ok, ResData} -> #answer{success = true, response = ResData};
                              {error, Reason} -> #answer{success = false, response = Reason}
@@ -62,9 +58,13 @@ handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"get">>})
     if_registred_do(fun() -> 
                             db:get_user_shoplist(Login) 
                     end, Login);
-handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"set">>, body = Shoplist}) -> %% Shoplist - тупо строка(или объект?)
+handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"set">>, body = Shoplist}) -> %% Shoplist - тупо строка
     if_registred_do(fun() -> 
                             db:set_user_shoplist(Login, Shoplist) 
+                    end, Login);
+handle_worker(recipes, <<"POST">>, #request{login = Login, action = <<"get">>, body = FindData}) ->
+    if_registred_do(fun() ->
+                            recipes:get(FindData) 
                     end, Login).
 
 terminate(_Reason, _Req, _State) ->
@@ -78,22 +78,30 @@ if_registred_do(Fun, Login) ->
 %% utilite function
 
 encoder(Json) ->
-    Encoder = jsonx:encoder([{person,   record_info(fields, person)},
-                             {auth,  record_info(fields, auth)},
+    Encoder = jsonx:encoder([{person, record_info(fields, person)},
+                             {auth, record_info(fields, auth)},
                              {answer, record_info(fields, answer)},
                              {table, record_info(fields, table)},
                              {request, record_info(fields, request)},
-                             {product, record_info(fields, product)}],
+                             {product, record_info(fields, product)},
+                             {find_recipes, record_info(fields, find_recipes)},
+                             {recipes, record_info(fields, recipes)},
+                             {step, record_info(fields, step)},
+                             {recipe, record_info(fields, recipe)}],
                             [{format, proplist}]),
     Encoder(Json).
 
 decoder(Json) ->
-    Decoder = jsonx:decoder([{person,   record_info(fields, person)},
-                             {auth,  record_info(fields, auth)},
+    Decoder = jsonx:decoder([{person, record_info(fields, person)},
+                             {auth, record_info(fields, auth)},
                              {answer, record_info(fields, answer)},
                              {table, record_info(fields, table)},
                              {request, record_info(fields, request)},
-                             {product, record_info(fields, product)}],
+                             {product, record_info(fields, product)},
+                             {find_recipes, record_info(fields, find_recipes)},
+                             {recipes, record_info(fields, recipes)},
+                             {step, record_info(fields, step)},
+                             {recipe, record_info(fields, recipe)}],
                             [{format, proplist}]),
     Decoder(Json).
 

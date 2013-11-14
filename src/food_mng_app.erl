@@ -16,7 +16,8 @@ start(_StartType, _StartArgs) ->
                                               {"/", http_receiver, []},
                                               {"/user", http_receiver, [user]},
                                               {"/table", http_receiver, [table]},
-                                              {"/shoplist", http_receiver, [shoplist]}
+                                              {"/shoplist", http_receiver, [shoplist]},
+                                              {"/recipes", http_receiver, [recipes]}
                                             ]}
                                      ]),
     Port = port(),

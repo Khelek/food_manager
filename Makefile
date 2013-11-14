@@ -1,11 +1,13 @@
 REBAR = ./rebar
 
-all: dependencies compile
+all: dependencies compile_all
 
 dependencies:
 	$(REBAR) get-deps
+compile_all:
+	$(REBAR) compile  
 compile:
-	$(REBAR) compile 
+	$(REBAR) skip_deps=true compile  
 tests: 
 	$(REBAR) -C rebar.config get-deps compile
 	ERL_FLAGS="-config app.config -pa ebin deps/*/ebin" $(REBAR) -C rebar.config skip_deps=true eunit 
