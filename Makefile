@@ -14,7 +14,7 @@ clean:
 start:
 	erl -pa ebin deps/*/ebin +pc unicode -s food_mng
 rserve:
-	R -f r_src/rserve.r --gui-none --no-save
+	R -f r_src/init.r --gui-none --no-save
 deploy:
 	git push heroku master
 logs:
