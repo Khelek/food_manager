@@ -8,7 +8,7 @@ get(FindData)->
     {ok, #recipes{recipes = lists:duplicate(FindData#find_recipes.amount, recipe_dummy())}}.
 
 recipe_dummy() ->
-     #recipe{name = <<"Булки с чаем">>, time = <<"12 мин.">> number_portion = 4, complexity = 1, ingredients = [<<"2 булки">>, <<"1 чай">>],
+     #recipe{name = <<"Булки с чаем">>, time = <<"12 мин.">>, number_portion = 4, complexity = 1, ingredients = [<<"2 булки">>, <<"1 чай">>],
              steps_exists = true, how_to_cook = <<"см. шаги приготовления">>, 
              steps = [
                       #step{photo_url = <<"http://www.koolinar.ru/all_image/recipe_pictures/310/310683/rp310683_large.jpg">>,
