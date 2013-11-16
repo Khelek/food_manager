@@ -1,0 +1,35 @@
+﻿-- Table: cookbook
+
+-- DROP TABLE cookbook;
+
+CREATE TABLE cookbook
+(
+  cookbook_id integer NOT NULL,
+  title text,
+  description text,
+  media text,
+  group_id integer,
+  cookbookcategory_id integer,
+  publishdate text,
+  isstepphoto integer,
+  cookbooksubcategory_id integer,
+  cookbookencategory_id integer,
+  cookbookensubcategory_id integer,
+  titleen text,
+  descriptionen text,
+  ingredients text,
+  servingsnumber text,
+  recipeauthor text,
+  timeprepare integer,
+  timecooking integer,
+  servingsnumberen text,
+  recipeauthoren text,
+  rating text,
+  votescount text,
+  CONSTRAINT cookbook_pkey PRIMARY KEY (cookbook_id )
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE cookbook
+  OWNER TO postgres;
