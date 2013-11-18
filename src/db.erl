@@ -31,8 +31,31 @@ heroku_db(URL) ->
     Opts.
 
 get_products(ExcludeItems) ->
-    {ok, Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end), %% TODO: add exclude products to query
+    {ok, Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end),
     Products = lists:map(fun(A) -> erlang:tuple_to_list(A) end, Rows). 
+
+get_lists(Lang) ->
+    [{ok, C1, R1},{ok, C2, R2}] = db_request(fun(Conn) -> pgsql:squery(Conn, get_lists_query(Lang)) end),
+    Names = lists:flatten(lists:map(fun(A) -> erlang:tuple_to_list(A) end, R1)),
+    Types = lists:flatten(lists:map(fun(A) -> erlang:tuple_to_list(A) end, R2)),
+    Catalogue = [
+                 [{id, 1}, {title, <<"Салаты">>}],
+                 [{id, 2}, {title, <<"Закуски, бутерброды">>}],
+                 [{id, 3}, {title, <<"Первые блюда">>}],
+                 [{id, 4}, {title, <<"Вторые блюда">>}],
+                 [{id, 5}, {title, <<"Рыбные блюда">>}],
+                 [{id, 6}, {title, <<"Сладкая выпечка">>}],
+                 [{id, 7}, {title, <<"Несладкая выпечка">>}],
+                 [{id, 8}, {title, <<"Блины, оладьи">>}],
+                 [{id, 9}, {title, <<"Торты, пирожные">>}],
+                 [{id, 10}, {title, <<"Десерты">>}],
+                 [{id, 12}, {title, <<"Интересности">>}],
+                 [{id, 13}, {title, <<"Мясные блюда">>}],
+                 [{id, 14}, {title, <<"Суши, роллы">>}],
+                 [{id, 15}, {title, <<"Напитки, коктейли">>}]
+                ], 
+   Res = [{lang, Lang}, {names, Names}, {types, Types}, {catalogue, Catalogue}]. 
+    
 
 update_products_price(Values) -> %%%`
     {ok, Count} = db_request(fun(Conn) -> pgsql:equery(Conn, "update price from products values ($1, $2, $3)", [Values]) end). %% generic request
@@ -96,6 +119,12 @@ set_user_attr(Login, Query, Attr) ->
                        end
                end).
 %% queries
+
+get_lists_query(<<"ru">>) ->
+    "SELECT DISTINCT name FROM products; SELECT DISTINCT types[1] FROM products";
+get_lists_query(<<"en">>) ->
+    "SELECT DISTINCT en_name FROM products; SELECT DISTINCT types[1] FROM products".
+
 
 -spec get_products_query({ [string()], [string()] }) -> string().
 get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
