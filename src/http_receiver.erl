@@ -31,7 +31,7 @@ handle(Req, State) ->
                            ResJson = jsonx:encode(Res),
                            cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>}], ResJson, Req3);
                        _ -> 
-                           cowboy_req:reply(400, [], <<"Missing echo parameter.">>, Req)
+                           cowboy_req:reply(400, [], <<"Languague is not.">>, Req)
                        end,
                    {ok, Req3, State};
                <<"PUT">> ->
