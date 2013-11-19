@@ -64,9 +64,9 @@ handle_worker(table, <<"POST">>,  #request{login = Login, action = <<"get">>, bo
                             try
                                 {ok, processor:calculate_products_list(Data)} 
                             catch 
-                                throw:Term -> {error, erlang:list_to_bitstr(Term)};
-                                exit:Reason -> {error, erlang:list_to_bitstr(Reason)};
-                                error:Reason -> {error, erlang:list_to_bitstr(Reason)}
+                                throw:Term -> {error, binary:bin_to_list(Term)};
+                                exit:Reason -> {error, binary:bin_to_list(Reason)};
+                                error:Reason -> {error, binary:bin_to_list(Reason)}
                             end
                     end, Login);
 handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"get">>}) ->
