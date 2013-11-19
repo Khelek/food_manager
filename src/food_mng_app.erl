@@ -31,7 +31,7 @@ stop(_State) ->
     ok.
 
 port() ->
-    case os:getenv("PORT") of
+    case os:getenv("OPENSHIFT_DIY_PORT") of
         false ->
             {ok, Port} = application:get_env(http_port),
             Port;
