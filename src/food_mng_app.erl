@@ -22,13 +22,23 @@ start(_StartType, _StartArgs) ->
                                             ]}
                                      ]),
     Port = port(),
-    {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
+    IP = ip(),
+    {ok, _} = cowboy:start_http(http, 100, [{port, 8080}, {ip, IP}], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),
     food_mng_sup:start_link().
 
 stop(_State) ->
     ok.
+
+ip() ->
+    case os:getenv("OPENSHIFT_DIY_IP") of
+        false ->
+            {127,0,0,1};
+        Other ->
+            {ok, IP} = inet:parse_address(Other),
+            IP
+    end
 
 port() ->
     case os:getenv("OPENSHIFT_DIY_PORT") of
