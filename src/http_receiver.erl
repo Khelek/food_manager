@@ -39,7 +39,6 @@ handle(Req, State) ->
                <<"POST">> ->
                    {ok, Json, Req3} = cowboy_req:body(infinity, Req2),
                    Data = decoder(Json), 
-                   erlang:display(#find_recipes{}),
                    Res = case handle_worker(State, Method, Data) of
                              {ok, ResData} -> #answer{success = true, response = ResData};
                              {error, Reason} -> #answer{success = false, response = Reason}
