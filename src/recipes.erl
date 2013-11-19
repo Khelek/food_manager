@@ -7,7 +7,7 @@
 -compile(export_all).
 
 get(FindData) ->
-    {ok, #recipes{recipes = lists:duplicate(FindData#find_recipes.amount, recipe_dummy())}}..
+    {ok, #recipes{recipes = lists:duplicate(FindData#find_recipes.amount, recipe_dummy())}}.
 
 image_hash(Link) ->
     BinMd5 = crypto:hash(md5, Link),
