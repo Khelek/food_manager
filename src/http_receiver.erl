@@ -25,11 +25,11 @@ handle(Req, State) ->
                        <<"ru">> -> 
                            Res = db:get_lists(<<"ru">>),
                            ResJson = jsonx:encode(Res),
-                           cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>}], ResJson, Req3);
+                           cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>},{<<"charset">>, <<"UTF-8">>}], ResJson, Req3);
                        <<"en">> ->
                            Res = db:get_lists(<<"en">>),
                            ResJson = jsonx:encode(Res),
-                           cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>}], ResJson, Req3);
+                           cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>},{<<"charset">>, <<"UTF-8">>}], ResJson, Req3);
                        _ -> 
                            cowboy_req:reply(400, [], <<"Languague is not.">>, Req)
                        end,
@@ -44,7 +44,7 @@ handle(Req, State) ->
                              {error, Reason} -> #answer{success = false, response = Reason}
                          end,
                    ResJson = encoder(Res), 
-                   cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>}], ResJson, Req3);
+                   cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>},{<<"charset">>, <<"UTF-8">>}], ResJson, Req3);
                _ ->
                    some          
            end,
@@ -64,9 +64,9 @@ handle_worker(table, <<"POST">>,  #request{login = Login, action = <<"get">>, bo
                             try
                                 {ok, processor:calculate_products_list(Data)} 
                             catch 
-                                throw:Term -> {error, binary:bin_to_list(Term)};
-                                exit:Reason -> {error, binary:bin_to_list(Reason)};
-                                error:Reason -> {error, binary:bin_to_list(Reason)}
+                                throw:Term -> {erlang:list_to_bitstr(Term)};
+                                exit:Reason -> {erlang:list_to_bitstr(Reason)};
+                                error:Reason -> {erlang:list_to_bitstr("Wat is in handle_worker(table, POST, ..) error:Reason?")}
                             end
                     end, Login);
 handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"get">>}) ->
