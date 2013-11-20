@@ -5,4 +5,4 @@
 export PATH=$OPENSHIFT_DATA_DIR/bin:$PATH
 cd $OPENSHIFT_REPO_DIR
 make
-make start
+erl -pa ebin deps/*/ebin -noshell -noinput -s food_mng
