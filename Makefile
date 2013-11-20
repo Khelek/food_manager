@@ -18,6 +18,10 @@ start:
 rserve:
 	R -f r_src/init.r --gui-none --no-save
 deploy:
+	git push rhc
+ssh:
+	ssh 528bad4e4382ec462e000021@food-haukot.rhcloud.com
+heroku:
 	git push heroku master
 logs:
 	heroku logs -t

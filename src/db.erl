@@ -15,18 +15,23 @@
 
 
 db_request(Fun) ->
-    case os:getenv("DATABASE_URL") of
+    case os:getenv("OPENSHIFT_POSTGRESQL_DB_URL") of
         false ->
             {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]);
         URL ->
-            [User, Password, Host, Port, DB] = heroku_db(URL),
+            [User, Password, Host, Port, DB] = url_db(URL, openshift),
             {ok, Conn} = pgsql:connect(Host, User, Password, [{database, DB}, {port, list_to_integer(Port)}])
     end,
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
 
-heroku_db(URL) ->
+
+url_db(URL, openshift) ->
+    [DBName | Opts] = string:tokens(URL, "/:@"),
+    [Opts | "food"].
+
+url_db(URL) ->
     [DBName | Opts] = string:tokens(URL, "/:@"),
     Opts.
 
