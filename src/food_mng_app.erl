@@ -23,7 +23,7 @@ start(_StartType, _StartArgs) ->
                                      ]),
     Port = port(),
     IP = ip(),
-    {ok, _} = cowboy:start_http(http, 100, [{port, Port}], [
+    {ok, _} = cowboy:start_http(http, 100, [{reuseaddr, true}, {port, Port}, {ip, IP}], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),
     food_mng_sup:start_link().
@@ -41,7 +41,7 @@ ip() ->
     end.
 
 port() ->
-    case os:getenv("PORT") of
+    case os:getenv("OPENSHIFT_DIY_PORT") of
         false ->
             {ok, Port} = application:get_env(http_port),
             Port;
