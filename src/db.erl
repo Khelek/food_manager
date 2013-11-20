@@ -29,7 +29,7 @@ db_request(Fun) ->
 
 url_db(URL, openshift) ->
     [DBName | Opts] = string:tokens(URL, "/:@"),
-    [Opts | "food"].
+    lists:append(Opts, ["food"]).
 
 url_db(URL) ->
     [DBName | Opts] = string:tokens(URL, "/:@"),
