@@ -1,3 +1,3 @@
-The OpenShift `diy` cartridge documentation can be found at:
+The OpenShift `erlang` cartridge documentation can be found at:
 
-https://github.com/openshift/origin-server/tree/master/cartridges/openshift-origin-cartridge-diy/README.md
+https://github.com/openshift/origin-server/tree/master/cartridges/openshift-origin-cartridge-erlang/README.md
