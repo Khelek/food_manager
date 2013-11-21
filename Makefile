@@ -20,7 +20,7 @@ rserve:
 deploy:
 	git push rhc
 ssh:
-	ssh 528bad4e4382ec462e000021@food-haukot.rhcloud.com
+	ssh 528d98a9e0b8cd3aea00019f@db-haukot.rhcloud.com
 heroku:
 	git push heroku master
 logs:
