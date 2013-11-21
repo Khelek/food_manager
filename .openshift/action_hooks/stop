@@ -6,5 +6,5 @@ if [ -z "$(ps -ef | grep testrubyserver.rb | grep -v grep)" ]
 then
     client_result "Application is already stopped"
 else
-    kill `ps -ef | grep testrubyserver.rb | grep -v grep | awk '{ print $2 }'` > /dev/null 2>&1
+    kill `ps -ef | grep erl | grep -v grep | awk '{ print $2 }'` > /dev/null 2>&1
 fi

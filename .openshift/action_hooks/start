@@ -1,5 +1,8 @@
 #!/bin/bash
 # The logic to start up your application should be put in this
 # script. The application will work only if it binds to
-# $OPENSHIFT_ERLANG_IP:8080
-nohup $OPENSHIFT_REPO_DIR/erlang/testrubyserver.rb $OPENSHIFT_ERLANG_IP $OPENSHIFT_REPO_DIR/erlang > $OPENSHIFT_ERLANG_DIR/log/server.log 2>&1 &
+# $OPENSHIFT_DIY_IP:8080
+export PATH=$OPENSHIFT_DATA_DIR/bin:$PATH
+cd $OPENSHIFT_REPO_DIR
+make
+erl -pa ebin deps/*/ebin -noshell -noinput -s food_mng
