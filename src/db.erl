@@ -15,13 +15,7 @@
 
 
 db_request(Fun) ->
-    case os:getenv("OPENSHIFT_POSTGRESQL_DB_URL") of
-        false ->
-            {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]);
-        URL ->
-            [User, Password, Host, Port, DB] = url_db(URL, openshift),
-            {ok, Conn} = pgsql:connect(Host, User, Password, [{database, DB}, {port, list_to_integer(Port)}])
-    end,
+    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]);
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.

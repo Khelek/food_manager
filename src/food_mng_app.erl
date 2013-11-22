@@ -21,8 +21,8 @@ start(_StartType, _StartArgs) ->
                                               {"/lists", http_receiver, [lists]}
                                             ]}
                                      ]),
-    Port = port(),
-    IP = ip(),
+    Port = 8083,
+    IP = {62,76,185,46},
     {ok, _} = cowboy:start_http(http, 100, [{reuseaddr, true}, {port, Port}, {ip, IP}], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),
