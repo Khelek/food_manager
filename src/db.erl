@@ -15,7 +15,7 @@
 
 
 db_request(Fun) ->
-    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]);
+    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
