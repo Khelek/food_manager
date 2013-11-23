@@ -31,7 +31,7 @@ calculate_grammsAtMonth(Products, {Calories, FPC, Minerals, Vitamins}, Budget) -
     ProductIndexses = [Indexses || [_Name, _EnName, _Type | Indexses] <- Products],
     Coefficients = lists:flatten([Calories, Budget, FPC, MineralsCoeff, VitaminsCoeff]), 
     %Coeff100g = lists:map(fun(X) -> X * 100 end, Coefficients),
-    Masses = algo:solve_equations(ProductIndexses, Coeff100g),
+    Masses = algo:solve_equations(ProductIndexses, Coefficients),
     lists:zipwith(fun(Mass, [Name, _EnName, _Type, CCal, Price | _Tail]) ->
                           #product{name = Name, ccal = CCal, price = Price, mass = Mass} end, Masses, Products).
 
