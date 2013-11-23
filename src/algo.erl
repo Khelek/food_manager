@@ -3,7 +3,7 @@
 
 
 solve_equations(ListOfLists, Coeff) ->
-    Conn = erserve:open("localhost", 8082), 
+    Conn = erserve:open("localhost", 8085), 
     {ok, Rdata} = erserve:eval(Conn, "calculatediet(" ++ matrix_to_string(ListOfLists) ++ "," ++ vector_to_string(Coeff) ++ ")"),
     {xt_array_double, Vector} = Rdata,
     ok = erserve:close(Conn),

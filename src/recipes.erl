@@ -6,8 +6,29 @@
 
 -compile(export_all).
 
-get(FindData) ->
-    {ok, #recipes{recipes = lists:duplicate(FindData#find_recipes.amount, recipe_dummy())}}.
+get(Data) ->
+    Ingrs = string:tokens(binary:bin_to_list(Data#find_recipes.in_ingredients), ","),
+    {Recipes0, Steps0, Ingredients0} = db:get_recipes(binary:bin_to_list(Data#find_recipes.in_name),
+                                                      binary:bin_to_list(Data#find_recipes.in_text), 
+                                                      Ingrs, binary:bin_to_list(Data#find_recipes.catalog_id),
+                                                      binary:bin_to_list(Data#find_recipes.amount)),
+    Steps = lists:map(fun(X) -> lists:map(fun([Id, Src, Com]) -> 
+                                                  {Id, #step{
+                                                    photo_url = Src, comment = Com 
+                                                    }} end, X) end, filter0(Steps0, Recipes0)),
+    Ingredients0 = lists:map(fun(X) -> lists:map(fun([Id, Name, Count, Type, Comment]) ->
+                                                         {Id, Name ++ " " ++ integer_to_list(Count) ++ " " ++ Type ++ Comment}
+                                                 end, X) end, filter0(Ingredients0, Recipes0)).
+
+filter0(S, Recipes) ->
+    RecipesIds = [Id || [Id | Tail] <- Recipes],
+    lists:map(fun(X) ->
+                      filter(S, X) end, RecipesIds).
+    
+
+filter(S, RecipeId) ->
+    lists:filter(fun([X | _Tail]) ->  RecipeId == X end, S).
+                        
 
 image_hash(Link) ->
     BinMd5 = crypto:hash(md5, Link),

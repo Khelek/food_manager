@@ -15,7 +15,7 @@
 
 
 db_request(Fun) ->
-    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
+    {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
@@ -55,6 +55,17 @@ get_lists(Lang) ->
                 ], 
    Res = [{lang, Lang}, {names, Names}, {types, Types}, {catalogue, Catalogue}]. 
     
+get_recipes(Name, Text, Ingrs, CatalogId, Amount) ->
+    {Recipes, Steps, Ingredients} = db_request(fun(Conn) -> {ok, Cols1, RecipesRows} = pgsql:squery(Conn, get_recipes_query(Name, Text, Ingrs, CatalogId, Amount)),
+                                                  Recipes = lists:map(fun(A) -> erlang:tuple_to_list(A) end, RecipesRows),
+                                                  RecipesIds = [ erlang:binary_to_integer(Id) || [Id | Tail] <- Recipes],
+                                                  {ok, Cols2, StepsRows} = pgsql:squery(Conn, get_recipe_steps_query(RecipesIds)),
+                                                  {ok, Cols3, IngrsRows} = pgsql:squery(Conn, get_ingredients_query(RecipesIds)),
+                                                  Steps = lists:map(fun(A) -> erlang:tuple_to_list(A) end, StepsRows),
+                                                  Ingredients = lists:map(fun(A) -> erlang:tuple_to_list(A) end, IngrsRows),
+                                                  {Recipes, Steps, Ingredients}
+                                                  
+                                     end).
 
 update_products_price(Values) -> %%%`
     {ok, Count} = db_request(fun(Conn) -> pgsql:equery(Conn, "update price from products values ($1, $2, $3)", [Values]) end). %% generic request
@@ -124,6 +135,77 @@ get_lists_query(<<"ru">>) ->
 get_lists_query(<<"en">>) ->
     "SELECT DISTINCT en_name FROM products; SELECT DISTINCT types[1] FROM products".
 
+get_recipe_steps_query(RecipesIds) ->
+    "SELECT " 
+        ++ "cooksteps.cookbook_id, "
+        ++ "cooksteps.src, "
+        ++ "cooksteps.text "
+        ++ "FROM "
+        ++ "public.cookbook,"
+        ++ "public.cooksteps "
+        ++ "INNER JOIN ( "
+        ++ "SELECT unnest (" ++ pg_int_array(RecipesIds) ++ ") AS tbl_id "
+        ++ ") x ON cooksteps.cookbook_id = tbl_id "
+        ++ "WHERE "
+        ++ "cookbook.cookbook_id = cooksteps.cookbook_id;".
+
+get_ingredients_query(RecipesIds) ->
+    "SELECT " 
+	++ "cookingredients.cookbook_id, "
+	++ "ingr.title_ru, "
+	++ "cookingredients.count, "
+	++ "types.title_ru, "
+	++ "cookingredients.comment "
+        ++ "FROM cookingredients "
+        ++ "INNER JOIN ( "
+        ++ "SELECT unnest (" ++ pg_int_array(RecipesIds) ++ ") AS tbl_id "
+        ++ ") x ON cookingredients.cookbook_id = tbl_id "
+        ++ "INNER JOIN cookbookingredients as ingr ON  cookingredients.cookbookingredients_id = ingr.cookbookingredients_id "
+        ++ "INNER JOIN cookbookingredientstype as types ON cookingredients.cookbookingredientstype_id = types.cookbookingredientstype_id "
+        ++ "GROUP BY cookingredients.cookbook_id, "
+	++ "ingr.title_ru, "
+	++ "cookingredients.count, "
+	++ "types.title_ru, "
+	++ "cookingredients.comment "
+        ++ "ORDER BY cookingredients.cookbook_id; ".
+
+get_recipes_query(Name, Text, Ingrs, CatalogId, Amount) ->
+    "SELECT DISTINCT cookbook.cookbook_id, cookbook.title, cookbook.timecooking, cookbook.servingsnumber, "
+	++ "cookbook.isstepphoto, cookbook.description "
+        ++ "FROM cookbook "
+        ++ "INNER JOIN cookingredients as ingrs ON ingrs.cookbook_id = cookbook.cookbook_id "
+        ++ "INNER JOIN cookbookingredients as ingrname ON ingrname.cookbookingredients_id = ingrs.cookbookingredients_id "
+        ++ "INNER JOIN cooksteps as steps ON steps.cookbook_id = cookbook.cookbook_id "
+        ++ "WHERE "
+	++ like_ingrs(Ingrs)
+	++ "(steps.text ILIKE '%" ++ Text ++"%' OR cookbook.description ILIKE '%" ++ Text ++ "%') "
+        ++ and_catalog(CatalogId)
+	++ " AND "
+	++ "cookbook.title ILIKE '%" ++ Name ++ "%' "
+	++ " AND "
+	++ "(cookbook.timecooking >= 0 AND cookbook.timecooking < 30) " %%time
+        ++ "ORDER BY cookbook.cookbook_id "
+        ++ "LIMIT " ++ integer_to_list(Amount) ++";".
+
+and_catalog(0) ->
+    "";
+and_catalog(Catalog)->
+    " AND cookbook.cookbookcategory_id = " ++ integer_to_list(Catalog).
+
+like_ingrs([]) ->
+    "";
+like_ingrs(List) ->
+    "(" ++ like_ingrs0(List) ++ ") AND ".
+
+like_ingrs0([]) ->
+    [];
+like_ingrs0([Ingr | []]) ->
+    like_ingr(Ingr);
+like_ingrs0([Ingr | Tail]) ->
+    like_ingr(Ingr) ++ " OR " ++ like_ingrs0(Tail).
+
+like_ingr(Ingr) ->
+    " ingrname.title_ru ILIKE '%" ++ Ingr ++ "%' ".
 
 -spec get_products_query({ [string()], [string()] }) -> string().
 get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
@@ -151,6 +233,9 @@ not_products([]) ->
 not_products(ExcludeProducts) ->
     "NOT ARRAY[name] && " ++ pg_array(ExcludeProducts).
 %% utilite
+
+pg_int_array(ListInt) ->
+    "ARRAY[" ++ string:join(lists:map(fun(X) -> erlang:integer_to_list(X) end, ListInt), ",") ++ "]".
 
 pg_array(ListString) ->
     "ARRAY['" ++ string:join(binlist_to_list(ListString), "','") ++ "']".
