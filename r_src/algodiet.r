@@ -4,7 +4,7 @@ calculatediet <- function(M1, v) {
   # the inequalities (all pi>0)
   len <- length(M1) / length(v) 
   G <- diag(len)
-  H <- rep(50, len)
+  H <- rep(0, len)
   
   # standart deviation of B
   sdB = rep(5, length(v))
