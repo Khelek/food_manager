@@ -7,7 +7,7 @@ calculatediet <- function(M1, v) {
   H <- rep(100, len)
   
   # standart deviation of B
-  sdB = c(rep(15000, 10), rep(2000, length(v)))
+  sdB = c(rep(15000, 10), rep(2000, length(v) - 10))
   
   # solve
   res <- xsample(A = M1, B = v, G = G, H = H, sdB = sdB, iter = 2000, burninlength = 1000)
