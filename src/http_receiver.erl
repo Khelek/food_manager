@@ -64,9 +64,9 @@ handle_worker(table, <<"POST">>,  #request{login = Login, action = <<"get">>, bo
                             try
                                 {ok, processor:calculate_products_list(Data)} 
                             catch 
-                                throw:Term -> {erlang:list_to_bitstr("Not solving variant")};
-                                exit:Reason -> {erlang:list_to_bitstr("Not solving variant")};
-                                error:Reason -> {erlang:list_to_bitstr("Not solving variant")}
+                                throw:Term -> {erlang:list_to_bitstring("Не получается найти решение с этими данными")};
+                                exit:Reason -> {erlang:list_to_bitstring("Невозможно рассчитать ваше меню с текущими данными")};
+                                error:Reason -> {erlang:list_to_bitstring("Невозможно найти решение с текущими данными")}
                             end
                     end, Login);
 handle_worker(shoplist, <<"POST">>, #request{login = Login, action = <<"get">>}) ->
