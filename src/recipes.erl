@@ -22,7 +22,7 @@ get(Data) ->
     Ings = lists:map(fun(X) -> lists:map(fun([Id, Name, Count, Type, Comment]) ->
                                                         Space = <<" ">>,
                                                         {Id, <<Name/binary, Space/binary, Count/binary, Space/binary, 
-                                                         Type/binary, Comment/binary>>}
+                                                         Type/binary, Space/binary, Comment/binary>>}
                                                 end, X) end, filter0(Ingredients0, Recipes0)),
    {ok, #recipes{ recipes = [ #recipe{name = Title, time = Time, number_portion = 0, steps_exists = (Issteps == <<"1">>),
 how_to_cook = Descr, ingredients = [ Text || {Id, Text} <- lists:flatten(lists:filter(fun([{Id, Str} | Tail]) -> Id == IdRec end, Ings))],
