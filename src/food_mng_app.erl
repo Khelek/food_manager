@@ -23,7 +23,7 @@ start(_StartType, _StartArgs) ->
                                      ]),
     Port = 8083,
     IP = {62,76,185,46},
-    {ok, _} = cowboy:start_http(http, 100, [{reuseaddr, true}, {port, Port}, {ip, IP}], [
+    {ok, _} = cowboy:start_http(http, 100, [{reuseaddr, true}, {port, Port}], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),
     food_mng_sup:start_link().
