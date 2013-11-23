@@ -14,7 +14,7 @@ tests:
 clean:
 	$(REBAR) clean 
 start:
-	erl -pa ebin deps/*/ebin +pc unicode -s food_mng
+	erl -pa ebin deps/*/ebin  -s food_mng
 rserve:
 	R -f r_src/init.r --gui-none --no-save
 deploy:
