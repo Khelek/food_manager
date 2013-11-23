@@ -17,7 +17,7 @@ get(Data) ->
                                                       Data#find_recipes.amount),
     Steps = lists:map(fun(X) -> lists:map(fun([Id, Src, Com]) -> 
                                                   {Id, #step{
-                                                          photo_url = lists:flatten(string:tokens(Src, "\\")), comment = Com 
+                                                          photo_url = erlang:list_to_binary(lists:flatten(string:tokens( binary:bin_to_list(Src), "\\"))), comment = Com 
                                                          }} end, X) end, filter0(Steps0, Recipes0)),
     Ings = lists:map(fun(X) -> lists:map(fun([Id, Name, Count, Type, Comment]) ->
                                                         Space = <<" ">>,
