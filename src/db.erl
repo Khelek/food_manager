@@ -139,7 +139,7 @@ get_lists_query(<<"en">>) ->
 get_recipe_steps_query(RecipesIds) ->
     "SELECT " 
         ++ "cooksteps.cookbook_id, "
-        ++ "cooksteps.src, "
+        ++ "cooksteps.src_big, "
         ++ "cooksteps.text "
         ++ "FROM "
         ++ "public.cookbook,"
