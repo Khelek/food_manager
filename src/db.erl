@@ -15,8 +15,8 @@
 
 
 db_request(Fun) ->
-    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
-    %{ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
+    %{ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
+    {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "gray"}, {port, 55434}]),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
@@ -129,6 +129,7 @@ set_user_attr(Login, Query, Attr) ->
                            _ -> {error, <<"db error">>}
                        end
                end).
+
 %% queries
 
 get_lists_query(<<"ru">>) ->
@@ -188,31 +189,18 @@ get_recipes_query(Name, Text, Ingrs, CatalogId, Amount) ->
         ++ "ORDER BY cookbook.cookbook_id "
         ++ "LIMIT " ++ integer_to_list(Amount) ++";".
 
-and_catalog(0) ->
-    "";
-and_catalog(Catalog)->
-    " AND cookbook.cookbookcategory_id = " ++ integer_to_list(Catalog).
-
-like_ingrs([]) ->
-    "";
-like_ingrs(List) ->
-    "(" ++ like_ingrs0(List) ++ ") AND ".
-
-like_ingrs0([]) ->
-    [];
-like_ingrs0([Ingr | []]) ->
-    like_ingr(Ingr);
-like_ingrs0([Ingr | Tail]) ->
-    like_ingr(Ingr) ++ " OR " ++ like_ingrs0(Tail).
-
-like_ingr(Ingr) ->
-    " ingrname.title_ru ILIKE '%" ++ Ingr ++ "%' ".
 
 -spec get_products_query({ [string()], [string()] }) -> string().
 get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
-    "SELECT name, en_name, types, calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
-       "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
-        "h FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
+    "SELECT products.name, nutrients.name, info.value "
+        ++ "FROM products " 
+        ++ "INNER JOIN info ON info.product = products._id "
+        ++ "INNER JOIN nutrients ON info.nutrient = nutrients._id".
+%    "SELECT name, en_name, types, calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
+%       "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
+%        "h FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
+
+%% sql
 
 where([]) ->
     ";";
@@ -233,6 +221,27 @@ not_products([]) ->
     [];
 not_products(ExcludeProducts) ->
     "NOT ARRAY[name] && " ++ pg_array(ExcludeProducts).
+
+and_catalog(0) ->
+    "";
+and_catalog(Catalog)->
+    " AND cookbook.cookbookcategory_id = " ++ integer_to_list(Catalog).
+
+like_ingrs([]) ->
+    "";
+like_ingrs(List) ->
+    "(" ++ like_ingrs0(List) ++ ") AND ".
+
+like_ingrs0([]) ->
+    [];
+like_ingrs0([Ingr | []]) ->
+    like_ingr(Ingr);
+like_ingrs0([Ingr | Tail]) ->
+    like_ingr(Ingr) ++ " OR " ++ like_ingrs0(Tail).
+
+like_ingr(Ingr) ->
+    " ingrname.title_ru ILIKE '%" ++ Ingr ++ "%' ".
+
 %% utilite
 
 pg_int_array(ListInt) ->
@@ -243,3 +252,27 @@ pg_array(ListString) ->
 
 binlist_to_list(List) ->
     lists:map(fun(A) -> binary:bin_to_list(A) end, List).
+
+
+fold_map_by_name(List = [H | T]) ->
+    fold_map_by_name(H, T).
+
+fold_map_by_name(ElemAcc, []) -> [ElemAcc];
+fold_map_by_name(ElemAcc = [Name | _T], List = [[Name | CurrentBody] | Tail]) ->
+    fold_map_by_name(lists:append(ElemAcc, {CurrentBody}), Tail);
+fold_map_by_name(ElemAcc, [Elem | Tail]) ->
+    [ElemAcc | fold_map_by_name(Elem, Tail)].
+
+test_func() ->
+    A = [[1, "a", "b"],
+         [1, "c", "d"],
+         [1, "3", "4"],
+         [2, "23"],
+         [2, "43"],
+         ["adr", 1, 4, 5],
+         ["adr", 34, 23, 21]
+        ],
+    fold_by_name(A).
+
+
+    
