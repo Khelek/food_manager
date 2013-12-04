@@ -28,12 +28,13 @@ calculate_grammsAtMonth(Products, {Calories, FPC, Minerals, Vitamins}, Budget) -
     DropFirst = fun(L) -> [V || {_K, V} <- L] end,
     MineralsCoeff = DropFirst(Minerals),
     VitaminsCoeff = DropFirst(Vitamins),
-    ProductIndexses = [Indexses || [_Name, _EnName, _Type | Indexses] <- Products],
-    Coefficients = lists:flatten([Calories, Budget, FPC, MineralsCoeff, VitaminsCoeff]), 
+    ProductIndexses = [Indexses || [_Name | Indexses] <- Products],
+    Coefficients = lists:flatten([Budget, Calories, FPC, MineralsCoeff, VitaminsCoeff]), 
     Coeff100g = lists:map(fun(X) -> X * 100 end, Coefficients),
     %Masses = matlab_dummy(ProductIndexses),
+    erlang:display(Coeff100g),
     Masses = algo:solve_equations(ProductIndexses, Coeff100g),
-    lists:zipwith(fun(Mass, [Name, _EnName, _Type, CCal, Price | _Tail]) ->
+    lists:zipwith(fun(Mass, [Name, Price, CCal | _Tail]) ->
                           #product{name = Name, ccal = CCal, price = Price, mass = Mass} end, Masses, Products).
 
 calculate_substances(Person) ->
