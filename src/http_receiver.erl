@@ -12,6 +12,8 @@ init(_Transport, Req, []) ->
 init(_Transport, Req, [Opts]) ->
     {ok, Req, Opts}.
 
+u() ->
+    #find_recipes{}.
 
 handle(Req, State = undefined) ->
     {ok, Req, State}; %ошибка
@@ -25,11 +27,11 @@ handle(Req, State) ->
                        <<"ru">> -> 
                            Res = db:get_lists(<<"ru">>),
                            ResJson = jsonx:encode(Res),
-                           cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>},{<<"charset">>, <<"UTF-8">>}], ResJson, Req3);
+                           cowboy_req:reply(200, [{<<"content-type">>,<<"application/json; charset=utf-8">>}], ResJson, Req3);
                        <<"en">> ->
                            Res = db:get_lists(<<"en">>),
                            ResJson = jsonx:encode(Res),
-                           cowboy_req:reply(200, [{<<"content-type">>, <<"application/json">>},{<<"charset">>, <<"UTF-8">>}], ResJson, Req3);
+                           cowboy_req:reply(200, [{<<"content-type">>,<<"application/json; charset=utf-8">>}], ResJson, Req3);
                        _ -> 
                            cowboy_req:reply(400, [], <<"Languague is not.">>, Req)
                        end,
