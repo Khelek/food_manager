@@ -16,56 +16,32 @@
 
 db_request(Fun) ->
     %{ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
-    {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "gray"}, {port, 55434}]),
+    {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
 
-
-url_db(URL, openshift) ->
-    [DBName | Opts] = string:tokens(URL, "/:@"),
-    lists:append(Opts, ["food"]).
-
-url_db(URL) ->
-    [DBName | Opts] = string:tokens(URL, "/:@"),
-    Opts.
-
 get_products(ExcludeItems) ->
-    {ok, Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end),
-    Products = lists:map(fun(A) -> erlang:tuple_to_list(A) end, Rows). 
+    {ok, _Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end),
+    Products = lists:map(fun(A) -> erlang:tuple_to_list(A) end, Rows), 
+    lists:map(fun(X) -> make_nutrients_list(X) end, fold_map_by_name(Products)).
 
 get_lists(Lang) ->
-    [{ok, C1, R1},{ok, C2, R2}] = db_request(fun(Conn) -> pgsql:squery(Conn, get_lists_query(Lang)) end),
+    [{ok, _C1, R1},{ok, _C2, R2},{ok, _C3, R3}] = db_request(fun(Conn) -> pgsql:squery(Conn, get_lists_query(Lang)) end),
     Names = lists:flatten(lists:map(fun(A) -> erlang:tuple_to_list(A) end, R1)),
     Types = lists:flatten(lists:map(fun(A) -> erlang:tuple_to_list(A) end, R2)),
-    Catalogue = [
-                 [{id, 1}, {title, <<"Салаты"/utf8>>}],
-                 [{id, 2}, {title, <<"Закуски, бутерброды"/utf8>>}],
-                 [{id, 3}, {title, <<"Первые блюда"/utf8>>}],
-                 [{id, 4}, {title, <<"Вторые блюда"/utf8>>}],
-                 [{id, 5}, {title, <<"Рыбные блюда"/utf8>>}],
-                 [{id, 6}, {title, <<"Сладкая выпечка"/utf8>>}],
-                 [{id, 7}, {title, <<"Несладкая выпечка"/utf8>>}],
-                 [{id, 8}, {title, <<"Блины, оладьи"/utf8>>}],
-                 [{id, 9}, {title, <<"Торты, пирожные"/utf8>>}],
-                 [{id, 10}, {title, <<"Десерты"/utf8>>}],
-                 [{id, 12}, {title, <<"Интересности"/utf8>>}],
-                 [{id, 13}, {title, <<"Мясные блюда"/utf8>>}],
-                 [{id, 14}, {title, <<"Суши, роллы"/utf8>>}],
-                 [{id, 15}, {title, <<"Напитки, коктейли"/utf8>>}]
-                ], 
-   Res = [{lang, Lang}, {names, Names}, {types, Types}, {catalogue, Catalogue}]. 
+    Catalogue = [ lists:map(fun({Id, Name}) -> [{id, erlang:binary_to_integer(Id)}, {title, Name}] end, R3) ],
+    [{lang, Lang}, {names, Names}, {types, Types}, {catalogue, Catalogue}]. 
     
 get_recipes(Name, Text, Ingrs, CatalogId, Amount) ->
-    {Recipes, Steps, Ingredients} = db_request(fun(Conn) -> {ok, Cols1, RecipesRows} = pgsql:squery(Conn, get_recipes_query(Name, Text, Ingrs, CatalogId, Amount)),
+    {_Recipes, _Steps, _Ingredients} = db_request(fun(Conn) -> {ok, _Cols1, RecipesRows} = pgsql:squery(Conn, get_recipes_query(Name, Text, Ingrs, CatalogId, Amount)),
                                                   Recipes = lists:map(fun(A) -> erlang:tuple_to_list(A) end, RecipesRows),
-                                                  RecipesIds = [ erlang:binary_to_integer(Id) || [Id | Tail] <- Recipes],
-                                                  {ok, Cols2, StepsRows} = pgsql:squery(Conn, get_recipe_steps_query(RecipesIds)),
-                                                  {ok, Cols3, IngrsRows} = pgsql:squery(Conn, get_ingredients_query(RecipesIds)),
+                                                  RecipesIds = [ erlang:binary_to_integer(Id) || [Id | _Tail] <- Recipes],
+                                                  {ok, _Cols2, StepsRows} = pgsql:squery(Conn, get_recipe_steps_query(RecipesIds)),
+                                                  {ok, _Cols3, IngrsRows} = pgsql:squery(Conn, get_ingredients_query(RecipesIds)),
                                                   Steps = lists:map(fun(A) -> erlang:tuple_to_list(A) end, StepsRows),
                                                   Ingredients = lists:map(fun(A) -> erlang:tuple_to_list(A) end, IngrsRows),
                                                   {Recipes, Steps, Ingredients}
-                                                  
                                      end).
 
 update_products_price(Values) -> %%%`
@@ -74,7 +50,7 @@ update_products_price(Values) -> %%%`
 new_user(Login, Password) ->
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, ?select_user_query, [Login]) of
-                           {ok, Columns, Rows} when length(Rows) > 0 -> 
+                           {ok, _Columns, Rows} when length(Rows) > 0 -> 
                                {error, <<"login is busy">>};
                            _ -> 
                                case pgsql:equery(Conn, ?new_user_query, [Login, Password]) of
@@ -88,7 +64,7 @@ new_user(Login, Password) ->
 user_is_registred(Login) ->
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, ?select_user_query, [Login]) of
-                           {ok, Columns, Rows} when length(Rows) > 0 -> {ok, <<"user is registred">>};
+                           {ok, _Columns, Rows} when length(Rows) > 0 -> {ok, <<"user is registred">>};
                            _ -> {error, <<"user is not registred">>}
                        end
                end).
@@ -96,7 +72,7 @@ user_is_registred(Login) ->
 user_is_auth(Login, Password) ->
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, ?exists_user_query, [Login, Password]) of
-                           {ok, Columns, Rows} when length(Rows) > 0 -> {ok, <<"ok">>};
+                           {ok, _Columns, Rows} when length(Rows) > 0 -> {ok, <<"ok">>};
                            _ -> {error, <<"error">>}
                        end
                end).
@@ -116,8 +92,8 @@ set_user_shoplist(Login, Shoplist) ->
 get_user_attr(Login, Query) ->
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, Query, [Login]) of
-                           {ok, Columns, Rows = [{Attr}|_Tail]} when length(Rows) > 0, Attr == null -> {ok, <<"null">>};
-                           {ok, Columns, Rows = [{Attr}|_Tail]} when length(Rows) > 0 -> {ok, Attr};
+                           {ok, _Columns, Rows = [{Attr}|_Tail]} when length(Rows) > 0, Attr == null -> {ok, <<"null">>};
+                           {ok, _Columns, Rows = [{Attr}|_Tail]} when length(Rows) > 0 -> {ok, Attr};
                            _ -> {error, <<"db error">>}
                        end
                end).
@@ -125,7 +101,7 @@ get_user_attr(Login, Query) ->
 set_user_attr(Login, Query, Attr) ->    
     db_request(fun(Conn) -> 
                        case pgsql:equery(Conn, Query, [Login, Attr]) of
-                           {ok, Count} -> {ok, <<"ok">>};
+                           {ok, _Count} -> {ok, <<"ok">>};
                            _ -> {error, <<"db error">>}
                        end
                end).
@@ -133,9 +109,11 @@ set_user_attr(Login, Query, Attr) ->
 %% queries
 
 get_lists_query(<<"ru">>) ->
-    "SELECT DISTINCT name FROM products; SELECT DISTINCT types[1] FROM products";
+    "SELECT DISTINCT name FROM products; SELECT name FROM products_category; 
+     SELECT cookbookcategory_id, title FROM cookbookcategory WHERE cookbookcategory_id < 16";
 get_lists_query(<<"en">>) ->
-    "SELECT DISTINCT en_name FROM products; SELECT DISTINCT types[1] FROM products".
+    "SELECT DISTINCT en_name FROM products; SELECT en_name FROM products_category;
+     SELECT cookbookcategory_id, title FROM cookbookcategory WHERE cookbookcategory_id < 16".
 
 get_recipe_steps_query(RecipesIds) ->
     "SELECT " 
@@ -195,8 +173,10 @@ get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
     "SELECT products.name, nutrients.name, info.value "
         ++ "FROM products " 
         ++ "INNER JOIN info ON info.product = products._id "
-        ++ "INNER JOIN nutrients ON info.nutrient = nutrients._id".
-%    "SELECT name, en_name, types, calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
+        ++ "INNER JOIN nutrients ON info.nutrient = nutrients._id "
+        ++ "INNER JOIN products_category ON products_category._id = products.category "
+        ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
+%    "SELECT name,  calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
 %       "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
 %        "h FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
 
@@ -215,12 +195,12 @@ and_(Val1, Val2) ->
 not_types([]) ->
     [];
 not_types(ExcludeTypes) ->
-    "NOT types && " ++ pg_array(ExcludeTypes).
+    "NOT ARRAY[products_category.name] && " ++ pg_array(ExcludeTypes).
 
 not_products([]) ->
     [];
 not_products(ExcludeProducts) ->
-    "NOT ARRAY[name] && " ++ pg_array(ExcludeProducts).
+    "NOT ARRAY[products.name] && " ++ pg_array(ExcludeProducts).
 
 and_catalog(0) ->
     "";
@@ -253,17 +233,46 @@ pg_array(ListString) ->
 binlist_to_list(List) ->
     lists:map(fun(A) -> binary:bin_to_list(A) end, List).
 
-
-fold_map_by_name(List = [H | T]) ->
-    fold_map_by_name(H, T).
+fold_map_by_name(_List = [[Name | Body] | T]) ->
+    fold_map_by_name(lists:append([Name], [list_to_tuple(Body)]), T). % [name, {a,b,c}, {d,e,f}]
 
 fold_map_by_name(ElemAcc, []) -> [ElemAcc];
-fold_map_by_name(ElemAcc = [Name | _T], List = [[Name | CurrentBody] | Tail]) ->
-    fold_map_by_name(lists:append(ElemAcc, {CurrentBody}), Tail);
-fold_map_by_name(ElemAcc, [Elem | Tail]) ->
-    [ElemAcc | fold_map_by_name(Elem, Tail)].
+fold_map_by_name(ElemAcc = [Name | _T], _List = [[Name | CurrentBody] | Tail]) ->
+    fold_map_by_name(lists:append(ElemAcc, [list_to_tuple(CurrentBody)]), Tail);
+fold_map_by_name(ElemAcc, [[ElemName | ElemBody] | Tail]) ->
+    [ElemAcc | fold_map_by_name(lists:append([ElemName], [list_to_tuple(ElemBody)]), Tail)].
 
-test_func() ->
+make_nutrients_list(NameMap = [Name | _Body]) ->
+    Vitamins = [<<"Стоимость">>, <<"Калорийность">>, <<"Жиры">>, <<"Белки">>, <<"Углеводы">>, <<"Кальций (Ca)">>, <<"Фосфор (P)">>, 
+                 <<"Натрий (Na)">>, <<"Калий (K)">>, <<"Хлор (Cl)">>, <<"Магний (Mg)">>,
+                 <<"Железо (Fe)">>, <<"Цинк (Zn)">>, <<"Селен (Se)">>, <<"Фтор (F)">>, <<"Йод (I)">>, 
+                 <<"Витамин А">>, <<"Витамин Е">>, <<"Витамин D">>, <<"Витамин K">>, <<"Витамин С">>,
+                 <<"Витамин В1">>, <<"Витамин В2">>, <<"Витамин В5">>, <<"Витамин В6">>, <<"Витамин В9">>,
+                 <<"Витамин В12">>, <<"Витамин РР">>, <<"Витамин Н">>],
+    VitaminsValues = lists:map(fun(X) ->
+                                       case lists:keyfind(X, 1, NameMap) of
+                                           {<<"Калорийность">>, Value} -> 1000 * bin_to_float(Value); %% ккал
+                                           {VitName, Value} when VitName == <<"Витамин А">>;   VitName == <<"Витамин В9">>;
+                                                                 VitName == <<"Витамин В12">>; VitName == <<"Витамин Н">>;
+                                                                 VitName == <<"Йод (I)">>;     VitName == <<"Селен (Se)">>;
+                                                                 VitName == <<"Фтор (F)">>;    VitName == <<"Цинк (Zn)">>;
+                                                                 VitName == <<"Витамин В5">> 
+                                                                 -> 0.001 * bin_to_float(Value); %% мкг
+                                           {_VitaminName, Value} -> bin_to_float(Value);
+                                           false -> 0.0
+                                       end
+                               end, Vitamins),
+    [Name | VitaminsValues].
+
+bin_to_float(Bin) ->
+    N = binary_to_list(Bin),
+    case string:to_float(N) of
+        {error,no_float} -> float(list_to_integer(N));
+        {F,_Rest} -> F
+    end.
+%% tests
+
+test_fold() ->
     A = [[1, "a", "b"],
          [1, "c", "d"],
          [1, "3", "4"],
@@ -272,7 +281,31 @@ test_func() ->
          ["adr", 1, 4, 5],
          ["adr", 34, 23, 21]
         ],
-    fold_by_name(A).
+    fold_map_by_name(A).
 
-
+tc() ->    
+    A = [{<<"Вино сухое белое"/utf8>>,<<"Белки"/utf8>>,<<"0.2">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Углеводы"/utf8>>,<<"0.3">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Калорийность"/utf8>>,<<"64">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Пищевые волокна"/utf8>>,<<"1.6">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Витамин В2"/utf8>>,<<"0.01">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Витамин РР"/utf8>>,<<"0.1">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Белки"/utf8>>,<<"0.2">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Углеводы"/utf8>>,<<"0.3">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Калорийность"/utf8>>,<<"64">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Сахара"/utf8>>,<<"0.3">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Пищевые волокна"/utf8>>,<<"1.6">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Витамин В2"/utf8>>,<<"0.01">>},
+         {<<"Вино ликерное"/utf8>>,<<"Вода"/utf8>>,<<"54.1">>},
+         {<<"Вино ликерное"/utf8>>,<<"Белки"/utf8>>,<<"0.5">>},
+         {<<"Вино ликерное"/utf8>>,<<"Углеводы"/utf8>>,<<"30">>},
+         {<<"Вино ликерное"/utf8>>,<<"Калорийность"/utf8>>,<<"212">>},
+         {<<"Вино ликерное"/utf8>>,<<"Сахара"/utf8>>,<<"30">>},
+         {<<"Вино ликерное"/utf8>>,<<"Пищевые волокна"/utf8>>,<<"1.6">>},
+         {<<"Вино столовое красное"/utf8>>,<<"Белки"/utf8>>,<<"0.07">>},
+         {<<"Вино столовое красное"/utf8>>,<<"Углеводы"/utf8>>,<<"2.61">>},
+         {<<"Вино столовое красное"/utf8>>,<<"Калорийность"/utf8>>,<<"85">>},
+         {<<"Вино столовое красное"/utf8>>,<<"Сахара"/utf8>>,<<"0.62">>}], 
+    AList = lists:map(fun(X) -> erlang:tuple_to_list(X) end, A),
+    lists:map(fun(X) -> make_nutrients_list(X)  end, fold_map_by_name(AList)).
     

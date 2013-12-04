@@ -10,24 +10,31 @@ get() ->
     recipes:get(#find_recipes{in_name = <<"">>, in_ingredients = <<"молоко">>, catalog_id = 6, amount = 10}).
 
 get(Data) ->
-    Ingrs = string:tokens(binary:bin_to_list(Data#find_recipes.in_ingredients), ","),
-    {Recipes0, Steps0, Ingredients0} = db:get_recipes(binary:bin_to_list(Data#find_recipes.in_name),
-                                                      binary:bin_to_list(Data#find_recipes.in_text), 
-                                                      Ingrs, Data#find_recipes.catalog_id,
-                                                      Data#find_recipes.amount),
-    Steps = lists:map(fun(X) -> lists:map(fun([Id, Src, Com]) -> 
-                                                  {Id, #step{
-                                                          photo_url = erlang:list_to_binary(lists:flatten(string:tokens( binary:bin_to_list(Src), "\\"))), comment = Com 
-                                                         }} end, X) end, filter0(Steps0, Recipes0)),
-    Ings = lists:map(fun(X) -> lists:map(fun([Id, Name, Count, Type, Comment]) ->
-                                                        Space = <<" ">>,
-                                                        {Id, <<Name/binary, Space/binary, Count/binary, Space/binary, 
-                                                         Type/binary, Space/binary, Comment/binary>>}
-                                                end, X) end, filter0(Ingredients0, Recipes0)),
-   {ok, #recipes{ recipes = [ #recipe{name = Title, time = Time, number_portion = 0, steps_exists = (Issteps == <<"1">>),
-how_to_cook = Descr, ingredients = [ Text || {Id, Text} <- lists:flatten(lists:filter(fun([{Id, Str} | Tail]) -> Id == IdRec end, Ings))],
-steps = [ Obj || {Id, Obj} <- lists:flatten(lists:filter(fun([{Id, Obj} | Tail]) -> Id == IdRec end, Steps))] }
-|| [IdRec, Title, Time, Portion, Issteps, Descr] <- Recipes0]}}. 
+    try
+        Ingrs = string:tokens(binary:bin_to_list(Data#find_recipes.in_ingredients), ","),
+        {Recipes0, Steps0, Ingredients0} = db:get_recipes(binary:bin_to_list(Data#find_recipes.in_name),
+                                                          binary:bin_to_list(Data#find_recipes.in_text), 
+                                                          Ingrs, Data#find_recipes.catalog_id,
+                                                          Data#find_recipes.amount),
+        Steps = lists:map(fun(X) -> lists:map(fun([Id, Src, Com]) -> 
+                                                      {Id, #step{
+                                                              photo_url = erlang:list_to_binary(lists:flatten(string:tokens( binary:bin_to_list(Src), "\\"))), comment = Com 
+                                                             }} end, X) end, filter0(Steps0, Recipes0)),
+        Ings = lists:map(fun(X) -> lists:map(fun([Id, Name, Count, Type, Comment]) ->
+                                                     Space = <<" ">>,
+                                                     {Id, <<Name/binary, Space/binary, Count/binary, Space/binary, 
+                                                            Type/binary, Space/binary, Comment/binary>>}
+                                             end, X) end, filter0(Ingredients0, Recipes0)),
+        {ok, #recipes{recipes = 
+                           [#recipe{name = Title, time = Time, number_portion = 0, steps_exists = (Issteps == <<"1">>),
+                                     how_to_cook = Descr,
+                                     ingredients = [ Text || {Id, Text} <- lists:flatten(lists:filter(fun([{Id, Str} | Tail]) -> Id == IdRec end, Ings))],
+                                     steps = [ Obj || {Id, Obj} <- lists:flatten(lists:filter(fun([{Id, Obj} | Tail]) -> Id == IdRec end, Steps))] }
+                              || [IdRec, Title, Time, Portion, Issteps, Descr] <- Recipes0]
+                     }}
+    catch
+        _:_ -> {error, <<"Невозможно получить рецепты; попробуйте другой запрос">>}
+    end.
 
 filter0(S, Recipes) ->
     RecipesIds = [Id || [Id | Tail] <- Recipes],
