@@ -15,8 +15,8 @@
 
 
 db_request(Fun) ->
-    %{ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
-    {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
+    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
+    %{ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
