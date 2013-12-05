@@ -13,15 +13,9 @@ tests:
 	ERL_FLAGS="-config app.config -pa ebin deps/*/ebin" $(REBAR) -C rebar.config skip_deps=true eunit 
 clean:
 	$(REBAR) clean 
-start:
-	erl -pa ebin deps/*/ebin  -s food_mng
+localstart:
+	kjell -pa ebin deps/*/ebin -s food_mng +pc unicode
 rserve:
-	R -f r_src/init.r --gui-none --no-save
-deploy:
-	git push rhc
-ssh:
-	ssh 528d98a9e0b8cd3aea00019f@db-haukot.rhcloud.com
-heroku:
-	git push heroku master
-logs:
-	heroku logs -t
+	nohup R -f r_src/init.r --gui-none --no-save
+serverstart:
+	nohup erl -pa ebin deps/*/ebin -s food_mng 
