@@ -22,6 +22,7 @@ db_request(Fun) ->
     Res.
 
 get_products(ExcludeItems) ->
+    %% erlang:display([get_products_query(ExcludeItems)]), %%% lager!11
     {ok, _Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end),
     Products = lists:map(fun(A) -> erlang:tuple_to_list(A) end, Rows), 
     lists:map(fun(X) -> make_nutrients_list(X) end, fold_map_by_name(Products)).
@@ -175,7 +176,8 @@ get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
         ++ "INNER JOIN info ON info.product = products._id "
         ++ "INNER JOIN nutrients ON info.nutrient = nutrients._id "
         ++ "INNER JOIN products_category ON products_category._id = products.category "
-        ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
+        ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts)))
+        ++ "GROUP BY products.name, nutrients.name, info.value;".
 %    "SELECT name,  calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
 %       "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
 %        "h FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
@@ -183,9 +185,9 @@ get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
 %% sql
 
 where([]) ->
-    ";";
+    " ";
 where(Condition) ->
-    " WHERE " ++ Condition ++ ";".
+    " WHERE " ++ Condition ++ " ".
 
 and_(Val1, Val2) when Val1 == []; Val2 == [] ->
     Val1 ++ Val2;
@@ -251,7 +253,6 @@ make_nutrients_list(NameMap = [Name | _Body]) ->
                  <<"Витамин В12">>, <<"Витамин РР">>, <<"Витамин Н">>],
     VitaminsValues = lists:map(fun(X) ->
                                        case lists:keyfind(X, 1, NameMap) of
-                                           {<<"Калорийность">>, Value} -> 1000 * bin_to_float(Value); %% ккал
                                            {VitName, Value} when VitName == <<"Витамин А">>;   VitName == <<"Витамин В9">>;
                                                                  VitName == <<"Витамин В12">>; VitName == <<"Витамин Н">>;
                                                                  VitName == <<"Йод (I)">>;     VitName == <<"Селен (Se)">>;
@@ -284,15 +285,15 @@ test_fold() ->
     fold_map_by_name(A).
 
 tc() ->    
-    A = [{<<"Вино сухое белое"/utf8>>,<<"Белки"/utf8>>,<<"0.2">>},
-         {<<"Вино сухое белое"/utf8>>,<<"Углеводы"/utf8>>,<<"0.3">>},
+    A = [{<<"Вино сухое белое"/utf8>>,<<"Белки">>,<<"0.2">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Углеводы">>,<<"0.3">>},
          {<<"Вино сухое белое"/utf8>>,<<"Калорийность"/utf8>>,<<"64">>},
          {<<"Вино сухое белое"/utf8>>,<<"Пищевые волокна"/utf8>>,<<"1.6">>},
          {<<"Вино сухое белое"/utf8>>,<<"Витамин В2"/utf8>>,<<"0.01">>},
          {<<"Вино сухое белое"/utf8>>,<<"Витамин РР"/utf8>>,<<"0.1">>},
-         {<<"Вино сухое красное"/utf8>>,<<"Белки"/utf8>>,<<"0.2">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Белки">>,<<"0.2">>},
          {<<"Вино сухое красное"/utf8>>,<<"Углеводы"/utf8>>,<<"0.3">>},
-         {<<"Вино сухое красное"/utf8>>,<<"Калорийность"/utf8>>,<<"64">>},
+         {<<"Вино сухое красное"/utf8>>,<<"Калорийность">>,<<"64">>},
          {<<"Вино сухое красное"/utf8>>,<<"Сахара"/utf8>>,<<"0.3">>},
          {<<"Вино сухое красное"/utf8>>,<<"Пищевые волокна"/utf8>>,<<"1.6">>},
          {<<"Вино сухое красное"/utf8>>,<<"Витамин В2"/utf8>>,<<"0.01">>},
@@ -303,6 +304,7 @@ tc() ->
          {<<"Вино ликерное"/utf8>>,<<"Сахара"/utf8>>,<<"30">>},
          {<<"Вино ликерное"/utf8>>,<<"Пищевые волокна"/utf8>>,<<"1.6">>},
          {<<"Вино столовое красное"/utf8>>,<<"Белки"/utf8>>,<<"0.07">>},
+         {<<"Вино сухое белое"/utf8>>,<<"Стоимость">>,<<"1000">>},
          {<<"Вино столовое красное"/utf8>>,<<"Углеводы"/utf8>>,<<"2.61">>},
          {<<"Вино столовое красное"/utf8>>,<<"Калорийность"/utf8>>,<<"85">>},
          {<<"Вино столовое красное"/utf8>>,<<"Сахара"/utf8>>,<<"0.62">>}], 
