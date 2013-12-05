@@ -18,4 +18,4 @@ localstart:
 rserve:
 	nohup R -f r_src/init.r --gui-none --no-save
 serverstart:
-	nohup erl -pa ebin deps/*/ebin -s food_mng 
+	nohup erl -pa ebin deps/*/ebin -noshell -noinput -detached -s food_mng
