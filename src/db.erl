@@ -31,7 +31,7 @@ get_lists(Lang) ->
     [{ok, _C1, R1},{ok, _C2, R2},{ok, _C3, R3}] = db_request(fun(Conn) -> pgsql:squery(Conn, get_lists_query(Lang)) end),
     Names = lists:flatten(lists:map(fun(A) -> erlang:tuple_to_list(A) end, R1)),
     Types = lists:flatten(lists:map(fun(A) -> erlang:tuple_to_list(A) end, R2)),
-    Catalogue = [ lists:map(fun({Id, Name}) -> [{id, erlang:binary_to_integer(Id)}, {title, Name}] end, R3) ],
+    Catalogue =  lists:map(fun({Id, Name}) -> [{id, erlang:binary_to_integer(Id)}, {title, Name}] end, R3) ,
     [{lang, Lang}, {names, Names}, {types, Types}, {catalogue, Catalogue}]. 
     
 get_recipes(Name, Text, Ingrs, CatalogId, Amount) ->
