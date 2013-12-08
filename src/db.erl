@@ -44,7 +44,6 @@ get_products(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
     Query = string:join(lists:map(fun({Category, Limit}) ->
                       get_products_by_category_query(Category, Limit, ExcludeProducts) 
               end, CategoryList), " "),
-    erlang:display(Query),
     ResponseList = db_request(fun(Conn) -> pgsql:squery(Conn, Query) end),
     Products = lists:map(fun(Row) ->
                                  erlang:tuple_to_list(Row) 
