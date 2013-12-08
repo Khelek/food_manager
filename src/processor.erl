@@ -34,8 +34,13 @@ calculate_grammsAtMonth(Products, {Calories, FPC, Minerals, Vitamins}, Budget) -
     %Masses = matlab_dummy(ProductIndexses),
     erlang:display(Coeff100g),
     Masses = algo:solve_equations(ProductIndexses, Coeff100g),
-    lists:zipwith(fun(Mass, [Name, Price, CCal | _Tail]) ->
-                          #product{name = Name, ccal = CCal, price = Price, mass = Mass} end, Masses, Products).
+    lists:filter(fun(A) -> A /= [] end, 
+                 lists:zipwith(fun(Mass, [Name, Price, CCal | _Tail]) ->
+                          case Mass of
+                              0 -> [];
+                              _ -> #product{name = Name, ccal = CCal, price = Price, mass = Mass}
+                          end
+                  end, Masses, Products)).
 
 calculate_substances(Person) ->
     CPD = calories_per_day(Person),

@@ -7,7 +7,7 @@ solve_equations(ListOfLists, Coeff) ->
     {ok, Rdata} = erserve:eval(Conn, "calculatediet(" ++ matrix_to_string(ListOfLists) ++ "," ++ vector_to_string(Coeff) ++ ")"),
     {xt_array_double, Vector} = Rdata,
     ok = erserve:close(Conn),
-    Vector.
+    lists:map(fun(A) -> round(A) end, Vector).
 
 matrix_to_string(Matrix) ->
     "cbind(" ++ string:join(lists:map(fun vector_to_string/1, Matrix), ",") ++ ")". 

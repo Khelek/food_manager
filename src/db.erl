@@ -15,16 +15,41 @@
 
 
 db_request(Fun) ->
-    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
-    %{ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
+    %{ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
+    {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
 
-get_products(ExcludeItems) ->
+get_products(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
     %% erlang:display([get_products_query(ExcludeItems)]), %%% lager!11
-    {ok, _Columns, Rows} = db_request(fun(Conn) -> pgsql:squery(Conn, get_products_query(ExcludeItems)) end),
-    Products = lists:map(fun(A) -> erlang:tuple_to_list(A) end, Rows), 
+    CategoryList = [
+                    {"Алкоголь", 10},
+                    {"Напитки", 10},
+                    {"Грибы", 6},
+                    {"Жиры растительные и животные", 10},
+                    {"Кондитерские изделия", 10},
+                    {"Крупы, злаковые, бобы", 10},
+                    {"Молочные продукты", 10},
+                    {"Мука, крахмал и макароны", 5},
+                    {"Мясные продукты", 10},
+                    {"Овощи и зелень", 12},
+                    {"Орехи и семена", 5},
+                    {"Рыба и морепродукты", 10},
+                    {"Специи, приправы и соусы", 10},
+                    {"Фрукты и ягоды", 15},
+                    {"Хлебобулочные изделия", 5},
+                    {"Яйца", 3}
+                   ],
+    Query = string:join(lists:map(fun({Category, Limit}) ->
+                      get_products_by_category_query(Category, Limit, ExcludeProducts) 
+              end, CategoryList), " "),
+    erlang:display(Query),
+    ResponseList = db_request(fun(Conn) -> pgsql:squery(Conn, Query) end),
+    Products = lists:map(fun(Row) ->
+                                 erlang:tuple_to_list(Row) 
+                         end,
+                         lists:flatten(lists:map(fun({ok, Cols, Rows}) -> Rows end, ResponseList))),
     lists:map(fun(X) -> make_nutrients_list(X) end, fold_map_by_name(Products)).
 
 get_lists(Lang) ->
@@ -168,26 +193,28 @@ get_recipes_query(Name, Text, Ingrs, CatalogId, Amount) ->
         ++ "ORDER BY cookbook.cookbook_id "
         ++ "LIMIT " ++ integer_to_list(Amount) ++";".
 
-
--spec get_products_query({ [string()], [string()] }) -> string().
-get_products_query(_ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
-    "SELECT products.name, nutrients.name, info.value "
-        ++ "FROM products " 
-        ++ "INNER JOIN info ON info.product = products._id "
-        ++ "INNER JOIN nutrients ON info.nutrient = nutrients._id "
+get_products_by_category_query(Category, Limit, ExcludeProducts) ->
+    "SELECT prod.name, nutrients.name, info.value "
+        ++ "FROM (SELECT products._id, products.name FROM products "
         ++ "INNER JOIN products_category ON products_category._id = products.category "
-        ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts)))
-        ++ "GROUP BY products.name, nutrients.name, info.value;".
-%    "SELECT name,  calories, price, fats, proteins, carbohydrates, ca, pho, na, ka, hl, mg," ++
-%       "fe, zi, se, ft, jo, a, e, d, k, c, b1, b2, b5, b6, bc, b12, pp," ++ 
-%        "h FROM products" ++ where(and_(not_types(ExcludeTypes), not_products(ExcludeProducts))).
-
+        ++ "WHERE products_category.name = '" ++ Category ++ "' "
+        ++ and_(not_products(ExcludeProducts))
+        ++ "ORDER BY random() LIMIT " ++ integer_to_list(Limit) ++ ") as prod "
+        ++ "INNER JOIN info ON info.product = prod._id "
+        ++ "INNER JOIN nutrients ON info.nutrient = nutrients._id "
+        ++ "AND ARRAY[nutrients.name] && ARRAY['Калорийность', 'Стоимость', 'Белки', 'Углеводы', 'Жиры'] "
+        ++ "ORDER BY prod.name;".
 %% sql
 
 where([]) ->
     " ";
 where(Condition) ->
     " WHERE " ++ Condition ++ " ".
+
+and_(Val) when Val == [] ->
+    [];
+and_(Val) ->
+    "AND " ++ Val.
 
 and_(Val1, Val2) when Val1 == []; Val2 == [] ->
     Val1 ++ Val2;
@@ -227,10 +254,10 @@ like_ingr(Ingr) ->
 %% utilite
 
 pg_int_array(ListInt) ->
-    "ARRAY[" ++ string:join(lists:map(fun(X) -> erlang:integer_to_list(X) end, ListInt), ",") ++ "]".
+    " ARRAY[" ++ string:join(lists:map(fun(X) -> erlang:integer_to_list(X) end, ListInt), ",") ++ "] ".
 
 pg_array(ListString) ->
-    "ARRAY['" ++ string:join(binlist_to_list(ListString), "','") ++ "']".
+    " ARRAY['" ++ string:join(binlist_to_list(ListString), "','") ++ "'] ".
 
 binlist_to_list(List) ->
     lists:map(fun(A) -> binary:bin_to_list(A) end, List).
