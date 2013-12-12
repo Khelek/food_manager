@@ -14,8 +14,8 @@ tests:
 clean:
 	$(REBAR) clean 
 localstart:
-	kjell -pa ebin deps/*/ebin -s food_mng +pc unicode
+	kjell -config app.config -pa ebin deps/*/ebin -s food_mng +pc unicode
 rserve:
 	nohup R -f r_src/rserve.r --gui-none --no-save --silent
 serverstart:
-	nohup erl -pa ebin deps/*/ebin -noshell -noinput -detached -s food_mng
+	nohup erl -config app.config -pa ebin deps/*/ebin -noshell -noinput -detached -s food_mng
