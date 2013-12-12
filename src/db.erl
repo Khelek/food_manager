@@ -15,11 +15,20 @@
 
 
 db_request(Fun) ->
-    {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
-    %{ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
+    Conn = db_connect(),
     Res = Fun(Conn),
     pgsql:close(Conn),
     Res.
+
+db_connect() ->
+    case os:getenv("USER") of
+        "haukot" ->
+            {ok, Conn} = pgsql:connect("localhost", "postgres", "password", [{database, "mydb"}, {port, 55434}]),
+            Conn;
+        _ ->
+            {ok, Conn} = pgsql:connect("localhost", "foodmanager", "foodeat", [{database, "food"}]),
+            Conn
+    end.
 
 get_products(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
     %% erlang:display([get_products_query(ExcludeItems)]), %%% lager!11

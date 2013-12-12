@@ -68,6 +68,10 @@ handle_worker(table, <<"POST">>,  #request{login = Login, action = <<"get">>, bo
                             catch 
                                 throw:Term -> {error, erlang:list_to_bitstring("Не получается найти решение с этими данными")};
                                 exit:Reason -> {error, erlang:list_to_bitstring("Невозможно рассчитать ваше меню с текущими данными")};
+                                error:{badmatch,
+                                       {error,econnrefused}} -> restart_R(), 
+                                                                lager:error("R restarted"),
+                                                                {error, erlang:list_to_bitstring("Не получилось рассчитать решение")};
                                 error:Reason -> {error, erlang:list_to_bitstring("Невозможно найти решение с текущими данными")}
                             end
                     end, Login);
@@ -93,6 +97,9 @@ if_registred_do(Fun, Login) ->
         {error, Reason} -> {error, Reason}
     end.
 %% utilite function
+
+restart_R() ->
+    spawn(fun() -> os:cmd("nohup R -f r_src/rserve.r --gui-none --no-save") end).
 
 encoder(Json) ->
     Encoder = jsonx:encoder([{person, record_info(fields, person)},

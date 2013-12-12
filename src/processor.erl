@@ -32,7 +32,6 @@ calculate_grammsAtMonth(Products, {Calories, FPC, Minerals, Vitamins}, Budget) -
     Coefficients = lists:flatten([Budget, Calories, FPC]),%, MineralsCoeff, VitaminsCoeff]), 
     Coeff100g = lists:map(fun(X) -> X * 100 end, Coefficients),
     %Masses = matlab_dummy(ProductIndexses),
-    erlang:display(Coeff100g),
     Masses = algo:solve_equations(ProductIndexses, Coeff100g),
     lists:filter(fun(A) -> A /= [] end, 
                  lists:zipwith(fun(Mass, [Name, Price, CCal | _Tail]) ->

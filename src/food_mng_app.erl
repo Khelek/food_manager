@@ -22,29 +22,20 @@ start(_StartType, _StartArgs) ->
                                             ]}
                                      ]),
     Port = 8083,
-    IP = {62,76,185,46},
-    {ok, _} = cowboy:start_http(http, 100, [{reuseaddr, true}, {port, Port}, {ip, IP}], [
+    IP = ip(),
+    {ok, _} = cowboy:start_http(http, 100, [{reuseaddr, true}, {port, Port}, {ip, IP}
+                                           ], [
                                                             {env, [{dispatch, Dispatch}]}
                                                            ]),
     food_mng_sup:start_link().
 
+ip() ->
+    case os:getenv("USER") of
+        "haukot" ->
+            {0,0,0,0};
+        _ ->
+            {62,76,185,46}
+    end.
+
 stop(_State) ->
     ok.
-
-ip() ->
-    case os:getenv("OPENSHIFT_DIY_IP") of
-        false ->
-            {127,0,0,1};
-        Other ->
-            {ok, IP} = inet:parse_address(Other),
-            IP
-    end.
-
-port() ->
-    case os:getenv("OPENSHIFT_DIY_PORT") of
-        false ->
-            {ok, Port} = application:get_env(http_port),
-            Port;
-        Other ->
-            list_to_integer(Other)
-    end.
