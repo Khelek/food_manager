@@ -30,6 +30,14 @@ db_connect() ->
             Conn
     end.
 
+outher_union_lists([], List) -> 
+    List;
+outher_union_lists(List1, List2) ->
+    [H | T] = List1,
+    Key = erlang:binary_to_list(H),
+    ListRes = lists:keydelete(Key, 1, List2),
+    outher_union_lists(T, ListRes).
+
 get_products(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
     %% erlang:display([get_products_query(ExcludeItems)]), %%% lager!11
     CategoryList = [
@@ -50,9 +58,13 @@ get_products(ExcludeItems = {ExcludeTypes, ExcludeProducts}) ->
                     {"Хлебобулочные изделия", 5},
                     {"Яйца", 3}
                    ],
+    ResCategoryList = outher_union_lists(ExcludeTypes, CategoryList),
+    lager:notice("AAA", [ExcludeTypes]),
+    [A | B] = CategoryList,
+    lager:notice("AAA", [A]),
     Query = string:join(lists:map(fun({Category, Limit}) ->
                       get_products_by_category_query(Category, Limit, ExcludeProducts) 
-              end, CategoryList), " "),
+              end, ResCategoryList), " "),
     ResponseList = db_request(fun(Conn) -> pgsql:squery(Conn, Query) end),
     Products = lists:map(fun(Row) ->
                                  erlang:tuple_to_list(Row) 
