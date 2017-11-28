@@ -1,5 +1,5 @@
-Учебный проект - сервер для мобильного приложения meal for budget.
+Educational project, server for mobile app 'meal for budget'.
 
-Умеет подбирать для человека рацион питания на месяц, ориентируясь на необходимые витамины и минералы в пределах месячного бюджета.
+Pick up a diet for a month, taking into account the necessary vitamins, minerals and monthly budget ofindividual person.
 
-Итоговый рассчет(решение системы уравнений) реализован на языке R (папка r_src).
+The final calculation (solution of the system of equations) is realized in language R (folder r_src).
